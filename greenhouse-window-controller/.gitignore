@@ -1,0 +1,4 @@
+bin/
+.venv
+*.swp
+build/
