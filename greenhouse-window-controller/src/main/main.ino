@@ -6,44 +6,41 @@
 #define OPEN_CLOSE_MS 5000
 #define WINDOW_CLOSE_PIN 16
 #define WINDOW_OPEN_PIN 17
-
 #define DHT_PIN 4
 #define DHT_TYPE DHT22
+#define LOOP_DELAY_MS 5000
 
 DHT dht(DHT_PIN, DHT_TYPE);
-
-int lcdColumns = 16;
-int lcdRows = 2;
+const int lcdColumns = 16;
+const int lcdRows = 2;
 LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 
-void setupLCD()
-{
-    lcd.init();
-    // lcd.backlight();
-}
-
-void setupDHT() { dht.begin(); }
+// Vars
+float humidity;
+float temperature;
+float heatIndex;
+bool windowOpened = true;
 
 void setup()
 {
     Serial.begin(115200);
     pinMode(WINDOW_CLOSE_PIN, OUTPUT);
     pinMode(WINDOW_OPEN_PIN, OUTPUT);
-    setupDHT();
-    setupLCD();
+    dht.begin();
+    lcd.init();
+    // lcd.backlight();
 }
 
-float getTemperature() { return dht.readTemperature(); }
+void measureTemperature() { temperature = dht.readTemperature(); }
 
-float getHumidity() { return dht.readHumidity(); }
+void measureHumidity() { humidity = dht.readHumidity(); }
 
-float getHeatIndex(float temperature, float humidity)
+void calculateHeatIndex()
 {
-    return dht.computeHeatIndex(temperature, humidity, false);
+    heatIndex = dht.computeHeatIndex(temperature, humidity, false);
 }
 
-bool windowOpened = true;
-void showData(float temperature, float humidity)
+void displayState()
 {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -60,7 +57,16 @@ void showData(float temperature, float humidity)
     lcd.print(message);
 }
 
-void handleWindow(float heatIndex)
+void displayError()
+{
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Messfehler");
+    lcd.setCursor(0, 1);
+    lcd.print("Neuer Versuch");
+}
+
+void handleWindow()
 {
     if (heatIndex > HEAT_INDEX_THRESH && !windowOpened) {
         Serial.println("Open");
@@ -80,15 +86,16 @@ void handleWindow(float heatIndex)
 
 void loop()
 {
-    delay(3000);
+    delay(LOOP_DELAY_MS);
 
-    float temperature = getTemperature();
-    float humidity = getHumidity();
+    measureTemperature();
+    measureHumidity();
     if (isnan(temperature) || isnan(humidity)) {
         Serial.println(F("Failed to read from DHT sensor!"));
+        displayError();
         return;
     }
-    float heatIndex = getHeatIndex(temperature, humidity);
-    handleWindow(heatIndex);
-    showData(temperature, humidity);
+    calculateHeatIndex();
+    handleWindow();
+    displayState();
 }
