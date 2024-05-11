@@ -2,4 +2,4 @@
 
 Collection of home automation projects:
 
-- [Greenhouse Window Controller](greenhouse-window-controller/README.md)
+- [Greenhouse Window Controller](projects/greenhouse-window-controller/README.md)
