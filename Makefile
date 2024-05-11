@@ -30,3 +30,6 @@ libs:
 
 install: venv cli boards libs
 
+ci: install
+	@make -C projects/arduino-template compile
+	@make -C projects/greenhouse-window-controller compile
