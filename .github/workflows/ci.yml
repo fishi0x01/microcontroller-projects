@@ -10,4 +10,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: 'make test-greenhouse-window-controller'
+      - run: 'make install'
+      - run: 'make -C projects/arduino-template compile'
